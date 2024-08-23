@@ -77,7 +77,7 @@
     }
 
     .zoom-controls .btn {
-      border-radius: 50%;
+      border-radius: 25%;
       /* Make buttons circular */
     }
     
@@ -102,6 +102,15 @@
       right: 10px;
     }
 
+    /* CSS: Căn giữa nút ở phía dưới */
+#bottom-center-btn {
+  position: absolute;
+  bottom: 20px; /* Khoảng cách từ nút đến đáy màn hình */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10; /* Đảm bảo nút ở trên cùng */
+}
+
   </style>
 </head>
 <body>
@@ -116,7 +125,13 @@
           <i class="bi bi-save"></i>
         </button>
 
+
       </div>
+
+       <!-- Thêm nút mới ở đây -->
+    <button type="button" class="btn btn-primary" id="bottom-center-btn">
+      <span class="badge badge-light" id="current_page_value">9</span>
+    </button>
 
   <!-- New Buttons with Icons -->
 <button id="previous_page" class="btn btn-primary side-btn left-btn">
@@ -196,7 +211,8 @@
       let PATH_JSON = "assets/data/X.json";
       let PATH_IMG   =  PATH_ASSETS_IMG + "X.png";
       const SOUND_ICON_NAME = 'assets/music_icon.svg';
-      const SERVER_URL = "http://localhost:8080/api/save-json";
+      //const SERVER_URL = "http://localhost:8080/api/save-json";
+      const SERVER_URL = "http://127.0.0.1:8080/api/save-json";
       const SAVAE_FOLDER = "D:/Working/Study/KHoi/zizi/mk/assets/data/";
       const backgroundLayer = new Konva.Layer();
       const iconLayer = new Konva.Layer();
@@ -238,7 +254,7 @@
 
       function addPlayIcon(x, y, sound) {
 
-        if ("x" === sound.trim()) {
+        if (sound && "x" === sound.trim()) {
           return ;
         }
 
@@ -335,6 +351,8 @@
       function loadPage() {
         clearCanvas();
         CURRENT_PAGE_INDEX = parseInt($('#json-dropdown').val(), 10);
+
+        $('#current_page_value').text(CURRENT_PAGE_INDEX);
 
         if (CURRENT_PAGE_INDEX) {
           const urlJson = PATH_JSON.replace("X",  CURRENT_PAGE_INDEX); 
@@ -594,7 +612,7 @@ $('#send-json').click(function(event) {
   console.log('Button clicked');
 
   const backgroundSize = {
-      width: backgroundImage.width(),
+      width: backgroundImage.width(), 
       height: backgroundImage.height(),
   };
 

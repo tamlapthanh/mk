@@ -1,14 +1,12 @@
 {
-    "background": "72.webp",
-    "icons": [
-        {
-            "x": 1.042043486750081,
-            "y": 0.17915786985560564,
-            "sound": "x"
-        }
-    ],
-    "backgroundSize": {
-        "width": 554.8127177700349,
-        "height": 730
-    }
+  "background" : "72.webp",
+  "icons" : [ {
+    "x" : 0.09806201677850564,
+    "y" : 0.16819896574601662,
+    "sound" : " 229"
+  } ],
+  "backgroundSize" : {
+    "width" : 515.8999572466865,
+    "height" : 730
+  }
 }

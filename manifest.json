@@ -1,0 +1,22 @@
+{
+    "name": "Minh Khoi",
+    "short_name": "Minh Khoi",
+    "description": "Minh Khoi Web App.",
+    "start_url": "/mk/index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#0000ff",
+    "icons": [
+      {
+        "src": "assets/icons/icon.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "assets/icons/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
+  
