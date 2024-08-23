@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minh Khôi</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      overflow: hidden;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999; /* High z-index to cover all content */
+      display: none; /* Hidden by default */
+  }
+
+  .spinner-icon {
+      font-size: 3rem;
+      color: #007bff; /* Customize color */
+      animation: spin 1.5s linear infinite;
+  }
+
+  @keyframes spin {
+      0% {
+          transform: rotate(0deg);
+      }
+      100% {
+          transform: rotate(360deg);
+      }
+  }
+    #canvas-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .play-icon {
+      cursor: pointer;
+    }
+    .setting-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      top: 50px;
+      /* Adjust this value to position it below the setting button */
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      /* Arrange buttons in a column */
+      gap: 3px;
+      /* Space between buttons */
+      /* Ẩn trên các thiết bị lớn    display: none; */
+    }
+
+    .zoom-controls .btn {
+      border-radius: 50%;
+      /* Make buttons circular */
+    }
+    
+    /* Buttons positioned on the sides */
+    .side-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      font-size: 15px; /* Smaller icon size */
+      width: 28px; /* Smaller button size */
+      height: 28px; /* Smaller button size */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0; /* Remove padding */
+    }
+    .left-btn {
+      left: 10px;
+    }
+    .right-btn {
+      right: 10px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas"></div>
+    <button class="btn btn-primary setting-btn" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="bi bi-gear"></i></button>
+  </div>
+
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <button id="send-json"  type="button" class="btn btn-success">
+          <i class="bi bi-save"></i>
+        </button>
+
+      </div>
+
+  <!-- New Buttons with Icons -->
+<button id="previous_page" class="btn btn-primary side-btn left-btn">
+  <i class="bi bi-chevron-left"></i> <!-- Previous Page Icon -->
+</button>
+<button id="next_page"  class="btn btn-primary side-btn right-btn">
+  <i class="bi bi-chevron-right"></i> <!-- Next Page Icon -->
+</button>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-12" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="settingsModalLabel">Settings</h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="card">
+            <div class="card-header">
+              Select a background image:
+            </div>
+            <div class="card-body">
+              <select id="image-dropdown" >
+                <!-- Options will be populated by JavaScript -->
+              </select>
+              <input type="file" id="upload-image" />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+             Edit play sound icon:
+            </div>
+            <div class="card-body">
+              <input type="text" id="icon-sound-url"  />
+              <button type="button" id="save-icon" class="btn btn-primary">Save Icon</button>
+              <button  type="button"  class="btn btn-success add-icon" data-param="1">Add  Icon (1)</button>
+              <button  type="button"  class="btn btn-success add-icon" data-param="2">Add  Icon (2)</button>
+              <button  type="button"  class="btn btn-success add-icon" data-param="3">Add  Icon (3)</button>
+              <button type="button" id="delete-icon" class="btn btn-danger">Delete Icon</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              Select JSON
+            </div>
+            <div class="card-body">
+              <input type="text" id="jump-to-index-jso"  />
+              <select id="json-dropdown" ></select>
+            </div>
+          </div>
+
+        <div class="modal-footer">
+          <button id="clearButton" class="btn btn-danger">Clear</button>
+          <button id="save-json" class="btn btn-primary" >Save JSON</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+
+      const stage = new Konva.Stage({
+        container: 'canvas',
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+      let PATH_ASSETS_IMG = "assets/img/" ;
+      let PATH_SOUND = "assets/sound/";
+      let CURRENT_PAGE_INDEX = 1;
+      let MAX_PAGE_NUM = 145;
+      let MIN_PAGE_NUM = 1;
+      let PATH_JSON = "assets/data/X.json";
+      let PATH_IMG   =  PATH_ASSETS_IMG + "X.png";
+      const SOUND_ICON_NAME = 'assets/music_icon.svg';
+      const SERVER_URL = "http://localhost:8080/api/save-json";
+      const SAVAE_FOLDER = "D:/Working/Study/KHoi/zizi/mk/assets/data/";
+      const backgroundLayer = new Konva.Layer();
+      const iconLayer = new Konva.Layer();
+      stage.add(backgroundLayer);
+      stage.add(iconLayer);
+
+      //const imageDropdown = $('#imageDropdown');
+      const imageFileInput = $('#upload-image');
+      // const addIconButton = $('#add-icon');
+      // const jsonDropdown = $('#json-dropdown');
+      const iconSoundUrlInput = $('#icon-sound-url');
+      const iconXInput = $('#icon-x');
+      const iconYInput = $('#icon-y');
+      const saveIconButton = $('#save-icon');
+      const saveJsonButton = $('#save-json');
+
+      const previous_page = $('#previous_page');
+      const next_page = $('#next_page');
+      
+
+      let backgroundImage = null;
+      let playIcons = [];
+      let currentIcon = null;
+      let audio = null;
+
+      function playSound(fileName) {       
+        if (fileName) {
+          let url = PATH_SOUND + fileName;
+          if (null == audio) {
+            audio = new Audio(url);
+            audio.play();
+          } else {
+            audio.pause();
+            audio = new Audio(url);
+            audio.play();
+          }
+        }
+      }
+
+      function addPlayIcon(x, y, sound) {
+
+        if ("x" === sound.trim()) {
+          return ;
+        }
+
+
+        icon_size = 18;
+        Konva.Image.fromURL(SOUND_ICON_NAME, function(icon) {
+          icon.setAttrs({
+            x: x ||  (stage.width() - 150),
+            y: y || Math.random() * (stage.height() - 50),
+            width: icon_size,
+            height: icon_size,
+          });
+      
+          icon.setAttr('sound', sound || '');
+          icon.draggable(true);
+      
+          function handleInteraction() {
+              currentIcon = icon;
+              iconSoundUrlInput.val(icon.getAttr('sound') || '');
+              iconXInput.val(icon.x());
+              iconYInput.val(icon.y());
+              $('#settingsModal').modal('show');
+          }
+
+          icon.on('click', handleInteraction);
+          icon.on('touchend', handleInteraction);
+      
+          playIcons.push(icon);
+      
+          // Change cursor on hover
+          icon.on('mouseover', function() {
+            document.body.style.cursor = 'pointer';
+            
+          });
+          icon.on('mouseout', function() {
+            document.body.style.cursor = 'default';
+          });
+      
+          iconLayer.add(icon);
+          icon.moveToTop();
+          iconLayer.batchDraw();
+        });
+      }
+      
+
+      $('.add-icon').on('click', function() {
+        var max = parseInt( $(this).data('param'), 10) ;
+        for (var i = 0; i < max; i++) {
+          addPlayIcon();
+        }        
+      });
+
+      function loadJsonBackgroundAndIcons(data) {
+        if (data.background) {
+            const imageObj = new Image();
+            imageObj.onload = function() {
+                if (backgroundImage) backgroundImage.destroy();
+    
+                adjustBackgroundImage(imageObj);
+    
+                // Xóa các icon hiện có
+                playIcons.forEach(icon => icon.destroy());
+                playIcons = [];
+    
+                // Tính toán vị trí mới của các icon dựa trên kích thước hình nền mới
+                data.icons.forEach(iconData => {
+                    const iconX = iconData.x * backgroundImage.width() + backgroundImage.x();
+                    const iconY = iconData.y * backgroundImage.height() + backgroundImage.y();
+                    addPlayIcon(iconX, iconY, iconData.sound);
+                });
+            };
+            imageObj.src = PATH_ASSETS_IMG + data.background;
+        }
+      }
+
+      // Đảm bảo gọi adjustBackgroundImage khi tải hình ảnh mới
+      imageFileInput.change(function() {
+        clearCanvas();
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageObj = new Image();
+                imageObj.onload = function() {
+                    if (backgroundImage) backgroundImage.destroy();
+                    adjustBackgroundImage(imageObj);
+                };
+                imageObj.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+      });
+
+      function loadPage() {
+        clearCanvas();
+        CURRENT_PAGE_INDEX = parseInt($('#json-dropdown').val(), 10);
+
+        if (CURRENT_PAGE_INDEX) {
+          const urlJson = PATH_JSON.replace("X",  CURRENT_PAGE_INDEX); 
+          fetch(urlJson)
+            .then(response => response.json())
+            .then(data => {
+              backgroundLayer.clear();
+              iconLayer.clear();
+              loadJsonBackgroundAndIcons(data);
+            })
+            .catch(error => console.error('Error loading JSON:', error));
+        } else {
+          CURRENT_PAGE_INDEX = 1;
+          loadPage();
+        }
+        $('#settingsModal').modal('hide');
+        fitStageIntoParentContainer();
+      }
+
+      $('#json-dropdown').change(function() {
+        loadPage();
+      });
+
+      $('#image-dropdown').change(function() {
+          var selectedImage = $('#image-dropdown').val();
+          if (selectedImage) {
+            loadBackgroundImage(selectedImage);
+          }
+      });
+
+      function adjustBackgroundImage(imageObj) {
+        const imageWidth = imageObj.width;
+        const imageHeight = imageObj.height;
+
+        const stageWidth = stage.width();
+        const stageHeight = stage.height();
+
+        const aspectRatio = imageWidth / imageHeight;
+        let newWidth, newHeight;
+
+        if (stageWidth / stageHeight > aspectRatio) {
+          newWidth = stageHeight * aspectRatio;
+          newHeight = stageHeight;
+        } else {
+          newWidth = stageWidth;
+          newHeight = stageWidth / aspectRatio;
+        }
+
+        backgroundImage = new Konva.Image({
+          x: (stageWidth - newWidth) / 2,
+          y: (stageHeight - newHeight) / 2,
+          image: imageObj,
+          width: newWidth,
+          height: newHeight,
+        });
+
+        backgroundLayer.add(backgroundImage);
+        backgroundLayer.batchDraw();
+        stage.find('Image').forEach((image) => {
+          image.moveToBottom();
+        });
+        stage.on('resize', function() {
+          fitStageIntoParentContainer();
+        });
+        fitStageIntoParentContainer();
+      }
+
+      function fitStageIntoParentContainer() {
+        stage.width(window.innerWidth);
+        stage.height(window.innerHeight);
+        stage.batchDraw();
+      }
+
+
+      window.addEventListener('resize', loadPage);
+
+      $('#delete-icon').on('click', function() {
+        if (currentIcon) {
+          // Xóa biểu tượng khỏi danh sách và từ layer
+          const index = playIcons.indexOf(currentIcon);
+          if (index > -1) {
+            playIcons.splice(index, 1);
+          }
+          currentIcon.destroy();
+          iconLayer.batchDraw();
+    
+          // Reset các giá trị trong modal sau khi xóa
+          iconSoundUrlInput.val('');
+          currentIcon = null;
+    
+          $('#settingsModal').modal('hide');
+        }
+      });
+
+      saveIconButton.on('click', function() {
+        if (currentIcon) {
+          currentIcon.setAttrs({
+            x: parseFloat(iconXInput.val()) || currentIcon.x(),
+            y: parseFloat(iconYInput.val()) || currentIcon.y(),
+            sound: iconSoundUrlInput.val()
+          });
+          iconLayer.batchDraw();
+          $('#settingsModal').modal('hide');
+        }
+      });
+
+    
+      saveJsonButton.on('click', function() {
+        if (!backgroundImage) return;
+      
+        const backgroundSize = {
+          width: backgroundImage.width(),
+          height: backgroundImage.height(),
+        };
+      
+        const data = {
+          background: backgroundImage.image().src.replace(PATH_ASSETS_IMG, ""),
+          icons: playIcons.map(icon => ({
+            x: (icon.x() - backgroundImage.x()) / backgroundSize.width,
+            y: (icon.y() - backgroundImage.y()) / backgroundSize.height,
+            sound: icon.getAttr('sound')
+          })),
+          backgroundSize: backgroundSize // Lưu kích thước hình nền hiện tại
+        };
+      
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        var saveFileName = $('#json-dropdown').val() + ".json";
+        $('<a></a>')
+          .attr('href', url)
+          .attr('download',  saveFileName)
+          .appendTo('body')[0].click();
+      }); 
+ 
+
+      // Hàm để xóa tất cả các play icon và làm lại từ đầu, bao gồm cả hình nền
+  function clearCanvas() {
+    if(audio)
+      audio.pause();
+    // Xóa tất cả các play icons
+    playIcons.forEach(function(icon) {
+      icon.destroy();  // Xóa biểu tượng khỏi layer
+    });
+    playIcons = [];  // Xóa danh sách biểu tượng
+    iconLayer.destroyChildren();
+    iconLayer.batchDraw();  // Vẽ lại layer để cập nhật sự thay đổi
+
+    // Xóa hình nền
+    backgroundLayer.destroyChildren();  // Xóa tất cả các thành phần trên backgroundLayer
+    backgroundLayer.draw();  // Vẽ lại để cập nhật sự thay đổi
+
+    // Thiết lập lại kích thước canvas nếu cần
+    fitStageIntoParentContainer();  // Đảm bảo canvas phù hợp với kích thước mới
+
+    // Nếu cần reset thêm gì đó như là dữ liệu hay trạng thái thì thêm vào đây
+  }
+
+  // Thêm sự kiện cho nút Clear
+  function addClickAndTouchEvents(element, handler) {
+    element.on('click', handler);
+    element.on('touchend', handler);
+  }
+
+  function loadBackgroundImage(imageUrl) {
+    clearCanvas();
+    const imageObj = new Image();
+    imageObj.onload = function() {
+        if (backgroundImage) backgroundImage.destroy();
+        adjustBackgroundImage(imageObj);
+    };
+    imageUrl = PATH_IMG.replace("X", imageUrl);
+    imageObj.src = imageUrl;
+  }
+ 
+  function populateDropdown(dropdown, dataFileName) {
+
+    $.ajax({
+      url: dataFileName,
+      dataType: 'json',
+      success: function(data) {
+        // Iterate over the items and append them to the dropdown
+        $.each(data.items, function(key, value) {
+          $(dropdown).append($('<option></option>').attr('value', value.id).text(value.name));
+        });
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error("Failed to load JSON data: " + textStatus, errorThrown);
+      }
+    });
+  }
+
+  function popDropdown(dropdown, text, start, end) {
+    dropdown.empty();
+    // Add options dynamically
+    for (var i = start; i <= end; i++) {
+      var option = $('<option>', {
+        value: i,
+        text: text  + " " + i
+      });
+
+      // Set the default selected option
+      if (i === start) {
+        option.prop('selected', true);
+      }
+
+      dropdown.append(option);
+    }
+    
+  }
+
+  previous_page.on('click', function() {
+    CURRENT_PAGE_INDEX = CURRENT_PAGE_INDEX  -1 ;
+    if (CURRENT_PAGE_INDEX < 1) {
+      CURRENT_PAGE_INDEX = MAX_PAGE_NUM;
+    }
+    $('#json-dropdown').val(CURRENT_PAGE_INDEX).change();
+   // loadPage();
+  });
+
+  next_page.on('click', function() {
+    CURRENT_PAGE_INDEX = CURRENT_PAGE_INDEX  + 1 ;
+    if (CURRENT_PAGE_INDEX > MAX_PAGE_NUM) {
+      CURRENT_PAGE_INDEX = 1;
+    }
+    $('#json-dropdown').val(CURRENT_PAGE_INDEX).change();
+   // loadPage();
+  });
+  
+  $('#clearButton').on('click', function() {
+    clearCanvas();
+  });
+
+  $('#jump-to-index-jso').on('change', function() {
+    var inputValue = $(this).val();
+    $('#json-dropdown').val(inputValue).change();
+});
+
+
+function getFileNameFromUrl(imageSrc) {
+  try {
+      const url = new URL(imageSrc);
+      const pathname = url.pathname;
+      const fileName = pathname.substring(pathname.lastIndexOf('/') + 1);
+      return fileName;
+  } catch (e) {
+      console.error('Invalid URL:', e);
+      return null;
+  }
+}
+
+
+
+// Event listener for the "Send JSON to Server" button
+$('#send-json').click(function(event) {
+  event.preventDefault(); // Prevent the default form submission behavior
+  event.stopPropagation(); // Stop the event from bubbling up the DOM tree
+  console.log('Button clicked');
+
+  const backgroundSize = {
+      width: backgroundImage.width(),
+      height: backgroundImage.height(),
+  };
+
+  const fileName = getFileNameFromUrl(backgroundImage.image().src);
+  const jsonData = {
+      background: fileName,
+      icons: playIcons.map(icon => ({
+          x: (icon.x() - backgroundImage.x()) / backgroundSize.width,
+          y: (icon.y() - backgroundImage.y()) / backgroundSize.height,
+          sound: icon.getAttr('sound')
+      })),
+      backgroundSize: backgroundSize
+  };
+
+  console.log('Data to send:', JSON.stringify(jsonData, null, 2)); // Log the JSON data to be sent for verification
+  const saveFileName = $('#json-dropdown').val() + ".json";
+
+  // Create JSON data object to be sent to the server
+  const dataToSend = {
+      file_name: saveFileName,
+      save_folder: SAVAE_FOLDER,
+      json: JSON.stringify(jsonData) // Convert the JSON object to a string
+  };
+
+  // Create a new XMLHttpRequest object
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', SERVER_URL, true); // Set up the request to the server
+  xhr.setRequestHeader('Content-Type', 'application/json'); // Set the request header
+
+  // Handle the response from the server
+  xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+          console.log('Data successfully sent to server.'); // Log success response
+      } else {
+          console.error('Error sending data:', xhr.statusText); // Log error response
+      }
+  };
+
+  xhr.onerror = function() {
+      console.error('Request failed.'); // Log request failure
+  };
+
+  // Send the JSON data to the server
+  xhr.send(JSON.stringify(dataToSend));
+
+  return false; // Prevent form submission and page reload
+});
+
+function showSpinner() {
+  document.getElementById('spinnerOverlay').style.display = 'flex';
+}
+
+function hideSpinner() {
+  document.getElementById('spinnerOverlay').style.display = 'none';
+}
+
+    // Load page 1
+    // populateDropdown(jsonDropdown, "/assets/page.json");
+    // populateDropdown(imageDropdown, "/assets/img.json");
+
+    popDropdown ($('#json-dropdown'), "Page", MIN_PAGE_NUM, MAX_PAGE_NUM);
+    popDropdown ($('#image-dropdown'), "Image", MIN_PAGE_NUM, MAX_PAGE_NUM)
+
+    loadPage();
+
+    });
+  </script>
+</body>
+</html>

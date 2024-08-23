@@ -1,0 +1,95 @@
+{
+    "1.webp": {
+        "icon": 1,
+        "sounds": [
+            "x"
+        ],
+        "count": 1
+    },
+    "2.webp": {
+        "icon": 2,
+        "sounds": [
+            " x"
+        ],
+        "count": 1
+    },
+    "3.webp": {
+        "icon": 3,
+        "sounds": [
+            " x"
+        ],
+        "count": 1
+    },
+    "4.webp": {
+        "icon": 4,
+        "sounds": [
+            " x"
+        ],
+        "count": 1
+    },
+    "5.webp": {
+        "icon": 5,
+        "sounds": [
+            " x"
+        ],
+        "count": 1
+    },
+    "6.webp": {
+        "icon": 6,
+        "sounds": [
+            " 1_02"
+        ],
+        "count": 1
+    },
+    "7.webp": {
+        "icon": 7,
+        "sounds": [
+            " 1_03"
+        ],
+        "count": 1
+    },
+    "8.webp": {
+        "icon": 8,
+        "sounds": [
+            " x"
+        ],
+        "count": 1
+    },
+    "9.webp": {
+        "icon": 9,
+        "sounds": [
+            " x"
+        ],
+        "count": 1
+    },
+    "10.webp": {
+        "icon": 10,
+        "sounds": [
+            " 1_04"
+        ],
+        "count": 1
+    },
+    "11.webp": {
+        "icon": 11,
+        "sounds": [
+            " 1_06"
+        ],
+        "count": 1
+    },
+    "12.webp": {
+        "icon": 12,
+        "sounds": [
+            " 1_07"
+        ],
+        "count": 1
+    },
+    "13.webp": {
+        "icon": 13,
+        "sounds": [
+            " 1_09",
+            "1_08",
+            "1_10"
+        ],
+        "count": 3
+    }
+}

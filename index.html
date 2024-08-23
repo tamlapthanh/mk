@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minh Khoi 1.0.0</title>
+  <link rel="manifest" " href="manifest.json" />
+  <link rel="shortcut icon" type="image/png" href="assets/favicon.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999; /* High z-index to cover all content */
+      display: none; /* Hidden by default */
+  }
+
+  .spinner-icon {
+      font-size: 3rem;
+      color: #007bff; /* Customize color */
+      animation: spin 1.5s linear infinite;
+  }
+
+  @keyframes spin {
+      0% {
+          transform: rotate(0deg);
+      }
+      100% {
+          transform: rotate(360deg);
+      }
+  }
+
+    #canvas-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .play-icon {
+      cursor: pointer;
+    }
+
+    .setting-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      top: 40px;
+      /* Adjust this value to position it below the setting button */
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      /* Arrange buttons in a column */
+      gap: 3px;
+      /* Space between buttons */
+      /* Ẩn trên các thiết bị lớn    display: none; */
+    }
+
+    /* Media query cho thiết bị di động */
+    @media (max-width: 430px) {
+      .zoom-controls {
+        display: flex;
+      }
+    }
+
+    .small-btn {
+      width: 28px;
+      /* Adjust width for smaller button */
+      height: 28px;
+      /* Adjust height for smaller button */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      /* Adjust font size for smaller icon */
+    }
+
+    .zoom-controls .btn {
+      border-radius: 50%;
+      /* Make buttons circular */
+    }
+
+    /* Buttons positioned on the sides */
+    .side-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      /* Smaller icon size */
+      width: 28px;
+      /* Smaller button size */
+      height: 28px;
+      /* Smaller button size */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      /* Remove padding */
+    }
+
+    .left-btn {
+      left: 10px;
+    }
+
+    .right-btn {
+      right: 10px;
+    }
+    
+  </style>
+</head>
+
+<body>
+
+
+  <div id="canvas-container">
+
+         <!-- Loading Spinner Overlay -->
+         <div class="overlay" id="spinnerOverlay">
+          <i class="fas fa-spinner spinner-icon"></i>
+      </div>
+      
+    <div id="canvas"></div>
+
+    <button class="btn btn-primary setting-btn small-btn" data-bs-toggle="modal" data-bs-target="#settingsModal"><i
+        class="bi bi-gear"></i></button>
+
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+      <button id="zoom-in" class="btn btn-info small-btn">
+        <i class="bi bi-zoom-in"></i>
+      </button>
+      <button id="zoom-out" class="btn btn-info small-btn">
+        <i class="bi bi-zoom-out"></i>
+      </button>
+
+      <button id="playing-sound" class="btn btn-success small-btn">
+        <i class="bi bi-megaphone"></i>
+      </button>
+
+    </div>
+
+    <!-- New Buttons with Icons -->
+    <button id="previous_page" class="btn btn-info side-btn left-btn">
+      <i class="bi bi-chevron-left"></i> <!-- Previous Page Icon -->
+    </button>
+    <button id="next_page" class="btn btn-info side-btn right-btn ">
+      <i class="bi bi-chevron-right"></i> <!-- Next Page Icon -->
+    </button>
+
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-12" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="settingsModalLabel">Jump to which page?</h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="jump-to-index-jso" class="form-control" placeholder="page number" />
+          <select id="json-dropdown" class="form-select"></select>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+
+        const stage = new Konva.Stage({
+          container: 'canvas',
+          width: window.innerWidth,
+          height: window.innerHeight,
+          draggable: true,
+        });
+
+        let PATH_ASSETS_IMG = "assets/img/";
+        let PATH_SOUND = "assets/sound/";
+        let CURRENT_PAGE_INDEX = 1;
+        let MAX_PAGE_NUM = 145;
+        let MIN_PAGE_NUM = 1;
+        let PATH_JSON = "assets/data/X.json";
+        let PATH_IMG = PATH_ASSETS_IMG + "X.webp";
+        const backgroundLayer = new Konva.Layer();
+        const iconLayer = new Konva.Layer();
+        stage.add(backgroundLayer);
+        stage.add(iconLayer);
+
+        // start zoom
+        let zoomLevel = 1;
+        const zoomStep = 0.1;
+        const minZoom = 0.5;
+        const maxZoom = 3;
+    
+        let isPinching = false;
+    
+        function setZoom(scale) {
+          stage.scale({ x: scale, y: scale });
+          stage.batchDraw();
+        }
+    
+        // Zoom In button
+        $('#zoom-in').on('click', function () {
+          if (zoomLevel < maxZoom) {
+            zoomLevel += zoomStep;
+            setZoom(zoomLevel);
+          }
+        });
+    
+        // Zoom Out button
+        $('#zoom-out').on('click', function () {
+          if (zoomLevel > minZoom) {
+            zoomLevel -= zoomStep;
+            setZoom(zoomLevel);
+          }
+        });
+    
+        // Pinch-to-zoom with gestures
+        interact('#canvas').gesturable({
+          onstart: function () {
+            isPinching = true;
+            stage.draggable(false);  // Disable dragging during pinch-to-zoom
+          },
+          onmove: function (event) {
+            const { da } = event;
+            const scale = stage.scaleX() * (1 + da / 100);
+            if (scale >= minZoom && scale <= maxZoom) {
+              stage.scale({ x: scale, y: scale });
+              stage.batchDraw();
+            }
+          },
+          onend: function () {
+            isPinching = false;
+            stage.draggable(true);  // Re-enable dragging after pinch-to-zoom
+          }
+        });
+    
+        // Zoom with mouse wheel
+        stage.on('wheel', function (event) {
+          event.evt.preventDefault();
+          const oldScale = stage.scaleX();
+          const pointer = stage.getPointerPosition();
+    
+          const scaleBy = 1.1;
+          let newScale = oldScale;
+    
+          if (event.evt.deltaY > 0) {
+            newScale = oldScale / scaleBy;
+          } else {
+            newScale = oldScale * scaleBy;
+          }
+    
+          // Limit the zoom level
+          newScale = Math.max(minZoom, Math.min(maxZoom, newScale));
+    
+          const mousePointTo = {
+            x: (pointer.x - stage.x()) / oldScale,
+            y: (pointer.y - stage.y()) / oldScale,
+          };
+    
+          const newPos = {
+            x: pointer.x - mousePointTo.x * newScale,
+            y: pointer.y - mousePointTo.y * newScale,
+          };
+    
+          zoomLevel = newScale;
+          stage.scale({ x: newScale, y: newScale });
+          stage.position(newPos);
+          stage.batchDraw();
+        });
+    
+        interact('#canvas').draggable({
+          listeners: {
+            move(event) {
+              if (!isPinching) {  // Only allow dragging if not pinching
+                const { dx, dy } = event;
+                stage.x(stage.x() + dx);
+                stage.y(stage.y() + dy);
+                stage.batchDraw();
+              }
+            }
+          }
+        });
+
+        // end zoom
+
+        const iconSoundUrlInput = $('#icon-sound-url');
+        const iconXInput = $('#icon-x');
+        const iconYInput = $('#icon-y');
+        const previous_page = $('#previous_page');
+        const next_page = $('#next_page');
+
+        let backgroundImage = null;
+        let playIcons = [];
+        let currentIcon = null;
+        let audio = null;
+
+        function playSound(fileName) {
+          $('#playing-sound').removeClass("btn-danger");
+          if (fileName && "x" != fileName) {
+            let url = PATH_SOUND + fileName + ".mp3";
+            $("#playing-sound").show();
+            if (null == audio) {
+              audio = new Audio(url);
+              audio.play();
+            } else {
+              audio.pause();
+              audio = new Audio(url);
+              audio.play();
+            }
+            audio.addEventListener("ended", (event) => {
+              $("#playing-sound").hide();
+            });
+
+          }
+        }
+
+        function isNotMobile () {
+          const width = window.innerWidth;
+          const userAgent = navigator.userAgent.toLowerCase();
+
+          if (width < 768 || /mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+            return false;
+          } else {
+            return true;
+          }
+        }
+
+        function getIconSize() {
+          let icon_size = 21;
+          const width = window.innerWidth;
+          const userAgent = navigator.userAgent.toLowerCase();
+
+          if (width < 768 || /mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+            icon_size = 21;
+          } else if ((width >= 768 && width <= 1024) || /tablet|ipad|playbook|silk/i.test(userAgent)) {
+            icon_size = 21;
+          } else {
+            icon_size = 21;
+          }
+          return icon_size;
+        }
+
+        function addPlayIcon(x, y, sound) {
+
+          // don't show sound icon that are x
+          if ("x" == sound.trim()) {
+            return;
+          }
+
+          icon_size = getIconSize();
+          Konva.Image.fromURL('assets/music_icon.svg', function (icon) {
+            icon.setAttrs({
+              x: x || Math.random() * (stage.width() - 50),
+              y: y || Math.random() * (stage.height() - 50),
+              width: icon_size,
+              height: icon_size,
+            });
+
+            icon.setAttr('sound', sound || '');
+
+            function handleInteraction() {
+              currentIcon = icon;
+              iconSoundUrlInput.val(icon.getAttr('sound') || '');
+              iconXInput.val(icon.x());
+              iconYInput.val(icon.y());
+              if (icon.getAttr('sound')) {
+                playSound(icon.getAttr('sound'));
+              } else {
+                alert("Not found the sound id.")
+              }
+            }
+
+            icon.on('click', handleInteraction);
+            icon.on('touchend', handleInteraction);
+
+            playIcons.push(icon);
+
+            // Change cursor on hover
+            icon.on('mouseover', function () {
+              document.body.style.cursor = 'pointer';
+
+            });
+            icon.on('mouseout', function () {
+              document.body.style.cursor = 'default';
+            });
+
+            iconLayer.add(icon);
+            icon.moveToTop();
+            iconLayer.batchDraw();
+          });
+        }
+
+
+
+        function loadJsonBackgroundAndIcons(data) {
+          if (data.background) {
+            const imageObj = new Image();
+            imageObj.onload = function () {
+              //if (backgroundImage) backgroundImage.destroy();
+
+              adjustBackgroundImage(imageObj);
+
+              // Xóa các icon hiện có
+              playIcons.forEach(icon => icon.destroy());
+              playIcons = [];
+
+              // Tính toán vị trí mới của các icon dựa trên kích thước hình nền mới
+              data.icons.forEach(iconData => {
+                const iconX = iconData.x * backgroundImage.width() + backgroundImage.x();
+                const iconY = iconData.y * backgroundImage.height() + backgroundImage.y();
+                addPlayIcon(iconX, iconY, iconData.sound);
+              });
+              hideSpinner();
+            };
+            imageObj.src = PATH_ASSETS_IMG + data.background;
+            
+          }
+        }
+
+
+        async function fetchWithCache(url) {
+          const networkResponse = await fetch(url);
+          const responseBody = await networkResponse.json();
+          return responseBody;
+        }
+
+        function loadPage() {
+            clearCanvas();
+            $('#settingsModal').modal('hide');
+            CURRENT_PAGE_INDEX = parseInt($('#json-dropdown').val(), 10);
+        
+            showSpinner();
+
+            if (CURRENT_PAGE_INDEX) {
+              const urlJson = PATH_JSON.replace("X", CURRENT_PAGE_INDEX);
+              fetchWithCache(urlJson)
+              .then(data => {
+                backgroundLayer.clear();
+                iconLayer.clear();
+                loadJsonBackgroundAndIcons(data);
+             
+              })
+              .catch(error => console.error('Error loading JSON:', error));
+            } else {
+              CURRENT_PAGE_INDEX = MAX_PAGE_NUM;
+              loadPage();
+            }
+            fitStageIntoParentContainer();
+        }
+        
+        
+
+        $('#json-dropdown').change(function () {
+          loadPage();
+
+        });
+
+
+        function adjustBackgroundImage(imageObj) {
+          const imageWidth = imageObj.width;
+          const imageHeight = imageObj.height;
+
+          const stageWidth = stage.width();
+          const stageHeight = stage.height();
+
+          let aspectRatio = imageWidth / imageHeight;
+          let newWidth, newHeight;
+
+          if (stageWidth / stageHeight > aspectRatio) {
+            newWidth = stageHeight * aspectRatio;
+            newHeight = stageHeight;
+          } else {
+            newWidth = stageWidth;
+            newHeight = stageWidth / aspectRatio;
+          }
+
+          let x = 0;
+          let y = 0;
+          if (isNotMobile()) {
+            x=  (stageWidth - newWidth) / 2;
+            y = (stageHeight - newHeight) / 2;
+          }
+          backgroundImage = new Konva.Image({
+            x: x,
+            y: y,
+            image: imageObj,
+            width: newWidth,
+            height: newHeight,
+          });
+
+          backgroundLayer.add(backgroundImage);
+          backgroundLayer.batchDraw();
+          stage.find('Image').forEach((image) => {
+            image.moveToBottom();
+          });
+          stage.on('resize', function () {
+            fitStageIntoParentContainer();
+          });
+          fitStageIntoParentContainer();
+        }
+
+        function fitStageIntoParentContainer() {
+          stage.width(window.innerWidth);
+          stage.height(window.innerHeight);
+          stage.batchDraw();
+        }
+
+
+        window.addEventListener('resize', loadPage);
+
+
+        // Hàm để xóa tất cả các play icon và làm lại từ đầu, bao gồm cả hình nền
+        function clearCanvas() {
+          if (audio) {
+            audio.pause();
+          } 
+          $("#playing-sound").hide();      
+          // Xóa tất cả các play icons
+          playIcons.forEach(function (icon) {
+            icon.destroy();  // Xóa biểu tượng khỏi layer
+          });
+          playIcons = [];  // Xóa danh sách biểu tượng
+          iconLayer.batchDraw();  // Vẽ lại layer để cập nhật sự thay đổi
+
+          // Xóa hình nền
+          backgroundLayer.destroyChildren();  // Xóa tất cả các thành phần trên backgroundLayer
+          backgroundLayer.draw();  // Vẽ lại để cập nhật sự thay đổi
+
+          // Thiết lập lại kích thước canvas nếu cần
+          fitStageIntoParentContainer();  // Đảm bảo canvas phù hợp với kích thước mới
+
+          // Nếu cần reset thêm gì đó như là dữ liệu hay trạng thái thì thêm vào đây
+        }
+
+        // Thêm sự kiện cho nút Clear
+        function addClickAndTouchEvents(element, handler) {
+          element.on('click', handler);
+          element.on('touchend', handler);
+        }
+
+        function loadBackgroundImage(imageUrl) {
+          clearCanvas();
+          const imageObj = new Image();
+          imageObj.onload = function () {
+            //if (backgroundImage) backgroundImage.destroy();
+            adjustBackgroundImage(imageObj);
+          };
+          imageUrl = PATH_IMG.replace("X", imageUrl);
+          imageObj.src = imageUrl;
+        }
+
+
+        function popDropdown(dropdown, text, start, end) {
+          dropdown.empty();
+          // Add options dynamically
+          for (var i = start; i <= end; i++) {
+            var option = $('<option>', {
+              value: i,
+              text: text + " " + i
+            });
+
+            // Set the default selected option
+            if (i === start) {
+              option.prop('selected', true);
+            }
+
+            dropdown.append(option);
+          }
+
+        }
+
+       
+       $('#playing-sound').on('click', function () {
+            if (audio) {
+              if(audio.paused) {
+                audio.play();
+                $('#playing-sound').removeClass("btn-danger");
+              } else {
+                audio.pause();
+                $('#playing-sound').addClass("btn-danger");
+             }
+          }
+        });
+
+        previous_page.on('click', function () {
+          CURRENT_PAGE_INDEX = CURRENT_PAGE_INDEX - 1;
+          if (CURRENT_PAGE_INDEX < MIN_PAGE_NUM) {
+            CURRENT_PAGE_INDEX = MAX_PAGE_NUM;
+          }
+          $('#json-dropdown').val(CURRENT_PAGE_INDEX).change();
+        });
+
+        next_page.on('click', function () {
+          CURRENT_PAGE_INDEX = CURRENT_PAGE_INDEX + 1;
+          if (CURRENT_PAGE_INDEX > MAX_PAGE_NUM) {
+            CURRENT_PAGE_INDEX = MIN_PAGE_NUM;
+          }
+          $('#json-dropdown').val(CURRENT_PAGE_INDEX).change();
+        });
+
+        $('#jump-to-index-jso').on('change', function () {
+          var inputValue = $(this).val();
+          $('#json-dropdown').val(inputValue).change();
+        });
+
+        $('#clearButton').on('click', function () {
+          clearCanvas();
+        });
+
+      function showSpinner() {
+            document.getElementById('spinnerOverlay').style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinnerOverlay').style.display = 'none';
+        }
+
+        popDropdown($('#json-dropdown'), "Page", MIN_PAGE_NUM, MAX_PAGE_NUM);
+        loadPage();
+
+      });
+    </script>
+</body>
+
+</html>
