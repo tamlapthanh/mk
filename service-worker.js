@@ -1,6 +1,6 @@
 self.addEventListener('install', function(event) {
     event.waitUntil(
-      caches.open('pwa-english-27-cache').then(function(cache) {
+      caches.open('pwa-mk-cache').then(function(cache) {
         return cache.addAll([
           '/',
           'assets/icons/icon-192x192.png',
