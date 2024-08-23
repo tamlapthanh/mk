@@ -330,9 +330,11 @@
         let audio = null;
 
         function playSound(fileName) {
+
           $('#playing-sound').removeClass("btn-danger");
-          if (fileName && "x" != fileName) {
-            let url = PATH_SOUND + fileName + ".mp3";
+          if (fileName && "x" != fileName.trim()) {
+
+            let url = PATH_SOUND + fileName.trim()+ ".mp3";
             $("#playing-sound").show();
             if (null == audio) {
               audio = new Audio(url);
@@ -378,7 +380,7 @@
         function addPlayIcon(x, y, sound) {
 
           // don't show sound icon that are x
-          if ("x" == sound.trim()) {
+          if (sound && "x" == sound.trim()) {
             return;
           }
 
@@ -391,7 +393,7 @@
               height: icon_size,
             });
 
-            icon.setAttr('sound', sound || '');
+            icon.setAttr('sound',  sound.trim() || '');
 
             function handleInteraction() {
               currentIcon = icon;
