@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minh Khôi</title>
+  <title>Minh Khôi 1</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -205,15 +205,15 @@
       });
       let PATH_ASSETS_IMG = "assets/img/" ;
       let PATH_SOUND = "assets/sound/";
-      let CURRENT_PAGE_INDEX = 1;
       let MAX_PAGE_NUM = 145;
       let MIN_PAGE_NUM = 1;
+      let CURRENT_PAGE_INDEX = 1;
       let PATH_JSON = "assets/data/X.json";
       let PATH_IMG   =  PATH_ASSETS_IMG + "X.png";
       const SOUND_ICON_NAME = 'assets/music_icon.svg';
       //const SERVER_URL = "http://localhost:8080/api/save-json";
       const SERVER_URL = "http://127.0.0.1:8080/api/save-json";
-      const SAVAE_FOLDER = "D:/Working/Study/KHoi/zizi/mk/assets/data/";
+      const SAVAE_FOLDER = "D:/Working/Study/KHoi/zizi/mk/assets/data/11";
       const backgroundLayer = new Konva.Layer();
       const iconLayer = new Konva.Layer();
       stage.add(backgroundLayer);
@@ -235,7 +235,9 @@
 
       let backgroundImage = null;
       let playIcons = [];
+      let playGroups = [];
       let currentIcon = null;
+      let currentGroup = null;
       let audio = null;
 
       function playSound(fileName) {       
@@ -259,17 +261,19 @@
         }
 
 
+        const iconX = x ||  (stage.width() - 150);
+        const iconY = y || Math.random() * (stage.height() - 50);
         icon_size = 18;
         Konva.Image.fromURL(SOUND_ICON_NAME, function(icon) {
           icon.setAttrs({
-            x: x ||  (stage.width() - 150),
-            y: y || Math.random() * (stage.height() - 50),
+            x: 0,
+            y: 0,
             width: icon_size,
             height: icon_size,
           });
       
           icon.setAttr('sound', sound || '');
-          icon.draggable(true);
+          //icon.draggable(true);
       
           function handleInteraction() {
               currentIcon = icon;
@@ -279,10 +283,9 @@
               $('#settingsModal').modal('show');
           }
 
-          icon.on('click', handleInteraction);
-          icon.on('touchend', handleInteraction);
-      
-          playIcons.push(icon);
+          //icon.on('click', handleInteraction);
+         // icon.on('touchend', handleInteraction);
+          //playIcons.push(icon);
       
           // Change cursor on hover
           icon.on('mouseover', function() {
@@ -292,10 +295,60 @@
           icon.on('mouseout', function() {
             document.body.style.cursor = 'default';
           });
-      
-          iconLayer.add(icon);
-          icon.moveToTop();
-          iconLayer.batchDraw();
+
+          var text = new Konva.Text({
+            x: 0 , 
+            y: 0 - 15,
+            text: sound,
+            fontSize: 18,
+            fill: 'blue',
+            strokeWidth: 1,
+            stroke: 'blue', // Màu viền
+            fontFamily: 'Calibri',
+          });
+
+           // Bước 4: Tạo Group
+          var group = new Konva.Group({
+            x: iconX ,
+            y: iconY ,
+            draggable: true,  // Nếu muốn cho phép kéo thả
+          });
+
+          // Change cursor on hover
+          group.on('mouseover', function() {
+            document.body.style.cursor = 'pointer';
+            
+          });
+          group.on('mouseout', function() {
+            document.body.style.cursor = 'default';
+          });
+
+           function handleGroupInteraction() {
+            currentGroup = group;
+              currentIcon = group.find("Image");
+              iconSoundUrlInput.val(icon.getAttr('sound') || '');
+              iconXInput.val(icon.x());
+              iconYInput.val(icon.y());
+              $('#settingsModal').modal('show');
+           }
+          group.on('click', handleGroupInteraction);
+          group.on('touchend', handleGroupInteraction);
+
+          // Thêm Text và Image vào Group
+           group.add(icon);
+           group.add(text);
+          
+
+          // Bước 5: Thêm Group vào Layer
+            
+            iconLayer.add(group);
+            group.moveToTop();
+            iconLayer.batchDraw();
+
+
+          // iconLayer.add(icon);
+          // icon.moveToTop();
+          // iconLayer.batchDraw();
         });
       }
       
@@ -316,8 +369,8 @@
                 adjustBackgroundImage(imageObj);
     
                 // Xóa các icon hiện có
-                playIcons.forEach(icon => icon.destroy());
-                playIcons = [];
+                //playIcons.forEach(icon => icon.destroy());
+               // playIcons = [];
     
                 // Tính toán vị trí mới của các icon dựa trên kích thước hình nền mới
                 data.icons.forEach(iconData => {
@@ -430,13 +483,8 @@
       window.addEventListener('resize', loadPage);
 
       $('#delete-icon').on('click', function() {
-        if (currentIcon) {
-          // Xóa biểu tượng khỏi danh sách và từ layer
-          const index = playIcons.indexOf(currentIcon);
-          if (index > -1) {
-            playIcons.splice(index, 1);
-          }
-          currentIcon.destroy();
+        if (currentGroup) {
+          currentGroup.destroy();
           iconLayer.batchDraw();
     
           // Reset các giá trị trong modal sau khi xóa
@@ -448,12 +496,11 @@
       });
 
       saveIconButton.on('click', function() {
-        if (currentIcon) {
-          currentIcon.setAttrs({
-            x: parseFloat(iconXInput.val()) || currentIcon.x(),
-            y: parseFloat(iconYInput.val()) || currentIcon.y(),
-            sound: iconSoundUrlInput.val()
-          });
+        if (currentGroup) {
+
+          currentGroup.find("Image")[0].setAttr('sound', iconSoundUrlInput.val());
+          currentGroup.find("Text")[0].text(iconSoundUrlInput.val());
+
           iconLayer.batchDraw();
           $('#settingsModal').modal('hide');
         }
@@ -468,14 +515,27 @@
           height: backgroundImage.height(),
         };
       
+        // const data = {
+        //   background: backgroundImage.image().src.replace(PATH_ASSETS_IMG, ""),
+        //   icons: playIcons.map(icon => ({
+        //     x: (icon.x() - backgroundImage.x()) / backgroundSize.width,
+        //     y: (icon.y() - backgroundImage.y()) / backgroundSize.height,
+        //     sound: icon.getAttr('sound')
+        //   })),
+        //   backgroundSize: backgroundSize // Lưu kích thước hình nền hiện tại
+        // };
+
+        const groups = stage.find('Group'); 
         const data = {
-          background: backgroundImage.image().src.replace(PATH_ASSETS_IMG, ""),
-          icons: playIcons.map(icon => ({
-            x: (icon.x() - backgroundImage.x()) / backgroundSize.width,
-            y: (icon.y() - backgroundImage.y()) / backgroundSize.height,
-            sound: icon.getAttr('sound')
-          })),
-          backgroundSize: backgroundSize // Lưu kích thước hình nền hiện tại
+            background:  backgroundImage.image().src.replace(PATH_ASSETS_IMG, ""),
+            icons: groups.flatMap(group => 
+                group.find('Image').map(icon => ({
+                    x: (group.x() - backgroundImage.x()) / backgroundSize.width,
+                    y: (group.y() - backgroundImage.y()) / backgroundSize.height,
+                    sound: icon.getAttr('sound').trim()
+                }))
+            ),
+            backgroundSize: backgroundSize
         };
       
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -492,11 +552,14 @@
   function clearCanvas() {
     if(audio)
       audio.pause();
+      
     // Xóa tất cả các play icons
+    /*
     playIcons.forEach(function(icon) {
       icon.destroy();  // Xóa biểu tượng khỏi layer
     });
     playIcons = [];  // Xóa danh sách biểu tượng
+    */
     iconLayer.destroyChildren();
     iconLayer.batchDraw();  // Vẽ lại layer để cập nhật sự thay đổi
 
@@ -617,6 +680,7 @@ $('#send-json').click(function(event) {
   };
 
   const fileName = getFileNameFromUrl(backgroundImage.image().src);
+  /*
   const jsonData = {
       background: fileName,
       icons: playIcons.map(icon => ({
@@ -624,6 +688,20 @@ $('#send-json').click(function(event) {
           y: (icon.y() - backgroundImage.y()) / backgroundSize.height,
           sound: icon.getAttr('sound')
       })),
+      backgroundSize: backgroundSize
+  };
+  */
+
+  const groups = stage.find('Group'); 
+  const jsonData = {
+      background:  fileName,
+      icons: groups.flatMap(group => 
+          group.find('Image').map(icon => ({
+              x: (group.x() - backgroundImage.x()) / backgroundSize.width,
+              y: (group.y() - backgroundImage.y()) / backgroundSize.height,
+              sound: icon.getAttr('sound').trim()
+          }))
+      ),
       backgroundSize: backgroundSize
   };
 
