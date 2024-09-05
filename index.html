@@ -170,11 +170,11 @@
       </button>
 
       <button id="reset-zoom" class="btn btn-info btn-sm">
-        <i class="bi bi-x-octagon-fill"></i>
+        <i class="bi bi-fullscreen"></i>
       </button>
 
       <button id="playing-sound" class="btn btn-success btn-sm">
-        <i class="bi bi-megaphone"></i>
+         <img src="assets/icons/icons8-sound.gif" alt="Icon" style="width: 14px; height: 14px;">
       </button>
 
     </div>
@@ -198,10 +198,18 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <input type="text" id="jump-to-index-jso" class="form-control" placeholder="page number" />
-          <select id="json-dropdown" class="form-select"></select>
+          
+
+          <div class="input-group flex-nowrap">
+            <select id="json-dropdown" class="form-select"></select>
+          </div>
+
+          <div class="input-group flex-nowrap">
+            <input type="text" id="jump-to-index-jso" class="form-control" placeholder="Jump to which page?" />
+          </div>
+
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
           </div>
 
         </div>
@@ -220,7 +228,7 @@
 
         let PATH_ASSETS_IMG = "assets/img/";
         let PATH_SOUND = "assets/sound/";
-        let CURRENT_PAGE_INDEX = 1;
+        let CURRENT_PAGE_INDEX = 6;
         let MAX_PAGE_NUM = 145;
         let MIN_PAGE_NUM = 1;
         let PATH_JSON = "assets/data/X.json";
@@ -372,8 +380,12 @@
         let playIcons = [];
         let currentIcon = null;
         let audio = null;
+        let iconPath_1 = "assets/icons/icons8-play_1.gif";
+        let iconPath_2 = "assets/icons/icons8-play_2.gif";
 
-        function playSound(fileName) {
+        function playSound(fileName, icon) {
+
+         
 
           $('#playing-sound').removeClass("btn-danger");
           if (fileName && "x" != fileName.trim()) {
@@ -383,12 +395,15 @@
             if (null == audio) {
               audio = new Audio(url);
               audio.play();
+              changeImageUrl(iconPath_2, icon);
             } else {
               audio.pause();
               audio = new Audio(url);
               audio.play();
+              changeImageUrl(iconPath_2, icon);
             }
             audio.addEventListener("ended", (event) => {
+              changeImageUrl(iconPath_1, icon);
               $("#playing-sound").hide();
             });
 
@@ -421,6 +436,24 @@
           return icon_size;
         }
 
+        // Hàm để thay đổi hình ảnh
+        function changeImageUrl(newUrl, icon) {
+          // Tạo một đối tượng hình ảnh HTML mới
+          const newImage = new Image();
+          
+          // Đặt callback onload để cập nhật node hình ảnh KonvaJS
+          newImage.onload = function() {
+            // Cập nhật thuộc tính hình ảnh của node hình ảnh KonvaJS
+            icon.image(newImage);
+            
+            // Vẽ lại canvas để áp dụng thay đổi
+            iconLayer.batchDraw();
+          };
+
+          // Đặt nguồn của hình ảnh mới
+          newImage.src = newUrl;
+        }
+
         function addPlayIcon(x, y, sound) {
 
           // don't show sound icon that are x
@@ -429,7 +462,7 @@
           }
 
           icon_size = getIconSize();
-          Konva.Image.fromURL('assets/music_icon.svg', function (icon) {
+        Konva.Image.fromURL(iconPath_1, function (icon) {
             icon.setAttrs({
               x: x || Math.random() * (stage.width() - 50),
               y: y || Math.random() * (stage.height() - 50),
@@ -445,7 +478,8 @@
               iconXInput.val(icon.x());
               iconYInput.val(icon.y());
               if (icon.getAttr('sound')) {
-                playSound(icon.getAttr('sound'));
+               
+                playSound(icon.getAttr('sound'), currentIcon);
               } else {
                 alert("Not found the sound id.")
               }
@@ -631,7 +665,7 @@
         }
 
 
-        function popDropdown(dropdown, text, start, end) {
+        function popDropdown(dropdown, text, start, end, default_index) {
           dropdown.empty();
           // Add options dynamically
           for (var i = start; i <= end; i++) {
@@ -641,7 +675,7 @@
             });
 
             // Set the default selected option
-            if (i === start) {
+            if (i === default_index) {
               option.prop('selected', true);
             }
 
@@ -704,7 +738,7 @@
             : 'none';
         });
 
-        popDropdown($('#json-dropdown'), "Page", MIN_PAGE_NUM, MAX_PAGE_NUM);
+        popDropdown($('#json-dropdown'), "Page", MIN_PAGE_NUM, MAX_PAGE_NUM, CURRENT_PAGE_INDEX);
         loadPage();
 
       });
