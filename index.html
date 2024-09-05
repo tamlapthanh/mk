@@ -74,7 +74,7 @@
 
     .zoom-controls {
       position: absolute;
-      top: 40px;
+      top: 42px;
       /* Adjust this value to position it below the setting button */
       right: 10px;
       z-index: 10;
@@ -132,7 +132,6 @@
     .left-btn:hover,
     .right-btn:hover{
       background-color: #5bc0de; /* Change background color on hover */
-      color: #ffffff; /* Change text color on hover */
       border-color: #46b8da; /* Change border color */
       /*transform: scale(1.05);  Slightly increase the size */
       transition: all 0.3s ease; /* Add a smooth transition effect */
@@ -153,28 +152,28 @@
       
     <div id="canvas"></div>
 
-    <button id="setting" class="btn btn-primary setting-btn small-btn" ><i class="bi bi-gear"></i></button>
+    <button id="setting" class="btn btn-primary setting-btn btn-sm" ><i class="bi bi-gear"></i></button>
 
     <!-- Zoom Controls -->
     <div class="zoom-controls">
 
-      <button  class="btn btn-info small-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+      <button  class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#settingsModal">
         <i class="bi bi-list-ol"></i>
       </button>
 
-      <button id="zoom-in" class="btn btn-info small-btn">
+      <button id="zoom-in" class="btn btn-info btn-sm">
         <i class="bi bi-zoom-in"></i>
       </button>
 
-      <button id="zoom-out" class="btn btn-info small-btn ">
+      <button id="zoom-out" class="btn btn-info btn-sm ">
         <i class="bi bi-zoom-out"></i>
       </button>
 
-      <button id="reset-zoom" class="btn btn-info small-btn">
+      <button id="reset-zoom" class="btn btn-info btn-sm">
         <i class="bi bi-x-octagon-fill"></i>
       </button>
 
-      <button id="playing-sound" class="btn btn-success small-btn">
+      <button id="playing-sound" class="btn btn-success btn-sm">
         <i class="bi bi-megaphone"></i>
       </button>
 
