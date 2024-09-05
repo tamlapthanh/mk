@@ -82,15 +82,7 @@
       flex-direction: column;
       /* Arrange buttons in a column */
       gap: 3px;
-      /* Space between buttons */
-      /* Ẩn trên các thiết bị lớn    display: none; */
-    }
-
-    /* Media query cho thiết bị di động */
-    @media (max-width: 430px) {
-      .zoom-controls {
-        display: flex;
-      }
+      display: none; /* Initially hidden */
     }
 
     .small-btn {
@@ -135,6 +127,16 @@
     .right-btn {
       right: 10px;
     }
+
+    .small-btn:hover,
+    .left-btn:hover,
+    .right-btn:hover{
+      background-color: #5bc0de; /* Change background color on hover */
+      color: #ffffff; /* Change text color on hover */
+      border-color: #46b8da; /* Change border color */
+      /*transform: scale(1.05);  Slightly increase the size */
+      transition: all 0.3s ease; /* Add a smooth transition effect */
+    }
     
   </style>
 </head>
@@ -151,16 +153,25 @@
       
     <div id="canvas"></div>
 
-    <button class="btn btn-primary setting-btn small-btn" data-bs-toggle="modal" data-bs-target="#settingsModal"><i
-        class="bi bi-gear"></i></button>
+    <button id="setting" class="btn btn-primary setting-btn small-btn" ><i class="bi bi-gear"></i></button>
 
     <!-- Zoom Controls -->
     <div class="zoom-controls">
+
+      <button  class="btn btn-info small-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <i class="bi bi-list-ol"></i>
+      </button>
+
       <button id="zoom-in" class="btn btn-info small-btn">
         <i class="bi bi-zoom-in"></i>
       </button>
-      <button id="zoom-out" class="btn btn-info small-btn">
+
+      <button id="zoom-out" class="btn btn-info small-btn ">
         <i class="bi bi-zoom-out"></i>
+      </button>
+
+      <button id="reset-zoom" class="btn btn-info small-btn">
+        <i class="bi bi-x-octagon-fill"></i>
       </button>
 
       <button id="playing-sound" class="btn btn-success small-btn">
@@ -205,7 +216,7 @@
           container: 'canvas',
           width: window.innerWidth,
           height: window.innerHeight,
-          draggable: true,
+          draggable: false,
         });
 
         let PATH_ASSETS_IMG = "assets/img/";
@@ -222,9 +233,9 @@
 
         // start zoom
         let zoomLevel = 1;
-        const zoomStep = 0.1;
+        const zoomStep = 0.2;
         const minZoom = 0.5;
-        const maxZoom = 3;
+        const maxZoom = 10;
     
         let isPinching = false;
     
@@ -241,6 +252,13 @@
           }
         });
     
+          // Zoom Out button
+          $('#reset-zoom').on('click', function () {
+            stage.scale({ x: 1, y: 1 });
+            stage.position({ x: 0, y: 0 }); // Optionally reset position to top-left corner
+            stage.batchDraw(); // Re-draw the stage to apply changes
+          });
+
         // Zoom Out button
         $('#zoom-out').on('click', function () {
           if (zoomLevel > minZoom) {
@@ -268,6 +286,33 @@
             stage.draggable(true);  // Re-enable dragging after pinch-to-zoom
           }
         });
+        
+        let lastTouchTime = 0; // To store the time of the last touch
+        stage.on('touchstart', (e) => {
+          const now = Date.now();
+          const touchInterval = now - lastTouchTime;
+
+          if (touchInterval < 300) { // 300ms is the threshold for double-tap detection
+            // Handle double-tap event here
+            console.log('Double-tap detected!');
+            if (zoomLevel < maxZoom) {
+              zoomLevel += zoomStep;
+              setZoom(zoomLevel);
+            }
+          }
+
+          lastTouchTime = now;
+        });
+
+        // Mouse double-click event
+      stage.on('dblclick', (e) => {
+        console.log('Double-click detected!');
+        if (zoomLevel < maxZoom) {
+            zoomLevel += zoomStep;
+            setZoom(zoomLevel);
+          }
+      });
+
     
         // Zoom with mouse wheel
         stage.on('wheel', function (event) {
@@ -651,6 +696,14 @@
         function hideSpinner() {
             document.getElementById('spinnerOverlay').style.display = 'none';
         }
+
+
+        $('#setting').on('click', function () {
+          const zoomControls = document.querySelector('.zoom-controls');
+          zoomControls.style.display = (zoomControls.style.display === 'none' || zoomControls.style.display === '') 
+            ? 'flex' 
+            : 'none';
+        });
 
         popDropdown($('#json-dropdown'), "Page", MIN_PAGE_NUM, MAX_PAGE_NUM);
         loadPage();
