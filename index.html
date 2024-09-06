@@ -383,10 +383,34 @@
         let iconPath_1 = "assets/icons/icons8-play_1.gif";
         let iconPath_2 = "assets/icons/icons8-play_2.gif";
 
+        function resetIcons() {
+          const imageList = iconLayer.find('Image');
+          imageList.forEach(function(icon) {
+              
+          //  if (currentIcon.getAttr('sound')  != icon.getAttr('sound') ) {
+            if (currentIcon  != icon  ) {
+              // Tạo một đối tượng hình ảnh HTML mới
+              const newImage = new Image();
+              
+              // Đặt callback onload để cập nhật node hình ảnh KonvaJS
+              newImage.onload = function() {
+                // Cập nhật thuộc tính hình ảnh của node hình ảnh KonvaJS
+                icon.image(newImage);
+                
+                // Vẽ lại canvas để áp dụng thay đổi
+                iconLayer.batchDraw();
+              };
+
+              // Đặt nguồn của hình ảnh mới
+              newImage.src = iconPath_1;
+            }
+
+          });
+
+        }
         function playSound(fileName, icon) {
-
          
-
+          resetIcons();
           $('#playing-sound').removeClass("btn-danger");
           if (fileName && "x" != fileName.trim()) {
 
@@ -443,6 +467,7 @@
           
           // Đặt callback onload để cập nhật node hình ảnh KonvaJS
           newImage.onload = function() {
+            
             // Cập nhật thuộc tính hình ảnh của node hình ảnh KonvaJS
             icon.image(newImage);
             
